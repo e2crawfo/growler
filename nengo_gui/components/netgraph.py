@@ -53,6 +53,7 @@ class NetGraph(Component):
             self.last_modify_time = None
         except TypeError:  # happens if self.filename is None
             self.last_modify_time = None
+
         self.last_reload_check = time.time()
 
     def check_for_reload(self):
@@ -295,9 +296,11 @@ class NetGraph(Component):
     def _reload_update_item(self, uid, old_item, new_item, new_name_finder):
         """Tell the client about changes to the item due to reload."""
         changed = False
+
         if isinstance(old_item, (nengo.Node,
                                  nengo.Ensemble,
                                  nengo.Network)):
+
             old_label = self.page.get_label(old_item)
             new_label = self.page.get_label(
                 new_item, default_labels=new_name_finder.known_name)
@@ -351,6 +354,7 @@ class NetGraph(Component):
         return changed
 
     def get_parents(self, uid, default_labels=None):
+        """Get parent networks for a connection"""
         while uid not in self.parents:
             net = self.networks_to_search.pop(0)
             net_uid = self.page.get_uid(net, default_labels=default_labels)
@@ -474,6 +478,8 @@ class NetGraph(Component):
         self.to_be_sent.append(dict(type='js', code=js))
 
     def expand_network(self, network, client):
+        """Display an expanded network, including the root network"""
+
         if not self.page.config[network].has_layout:
             pos = self.layout.make_layout(network)
             for obj, layout in pos.items():
@@ -486,36 +492,45 @@ class NetGraph(Component):
         else:
             parent = self.page.get_uid(network)
         for ens in network.ensembles:
-            self.create_object(client, ens, type='ens', parent=parent)
+            self.create_object(client, ens, obj_type='ens', parent=parent)
         for node in network.nodes:
-            self.create_object(client, node, type='node', parent=parent)
+            self.create_object(client, node, obj_type='node', parent=parent)
         for net in network.networks:
-            self.create_object(client, net, type='net', parent=parent)
+            self.create_object(client, net, obj_type='net', parent=parent)
         for conn in network.connections:
             self.create_connection(client, conn, parent=parent)
         self.page.config[network].expanded = True
 
-    def create_object(self, client, obj, type, parent):
+    def create_object(self, client, obj, obj_type, parent):
+        """Send the JSON of the newly created objects to client-side"""
         uid = self.page.get_uid(obj)
+
+        # if the uid already exists, then it's already been inserted in
+        # the netgraph, so don't send anything
         if uid in self.uids:
             return
+
+        self.uids[uid] = obj
 
         pos = self.page.config[obj].pos
         if pos is None:
             import random
             pos = random.uniform(0, 1), random.uniform(0, 1)
             self.page.config[obj].pos = pos
+
         size = self.page.config[obj].size
         if size is None:
             size = (0.1, 0.1)
             self.page.config[obj].size = size
+
         label = self.page.get_label(obj)
-        self.uids[uid] = obj
-        info = dict(uid=uid, label=label, pos=pos, type=type, size=size,
+
+        info = dict(uid=uid, label=label, pos=pos, type=obj_type, size=size,
                     parent=parent)
+        info.update(self.get_extra_info(obj))
+
         if type == 'net':
             info['expanded'] = self.page.config[obj].expanded
-        info.update(self.get_extra_info(obj))
 
         client.write(json.dumps(info))
 
