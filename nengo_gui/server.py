@@ -9,6 +9,7 @@ import struct
 import ssl
 import sys
 import threading
+import time
 import traceback
 
 try:
@@ -418,10 +419,16 @@ class WebSocket(object):
         self.write_frame(WebSocketFrame.create_binary_frame(data))
 
 
-def _sendall(socket, data):
+def _sendall(s, data):
     bytes_sent = 0
     while bytes_sent < len(data):
-        bytes_sent += socket.send(data[bytes_sent:])
+        try:
+            bytes_sent += s.send(data[bytes_sent:])
+        except socket.error as e:
+            if e.errno == errno.EWOULDBLOCK:
+                time.sleep(0.01)
+            else:
+                raise
 
 
 
