@@ -418,6 +418,7 @@ class WebSocket(object):
     def write_binary(self, data):
         self.write_frame(WebSocketFrame.create_binary_frame(data))
 
+
 def _sendall(socket, data):
     bytes_sent = 0
     while bytes_sent < len(data):
