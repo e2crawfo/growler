@@ -421,14 +421,8 @@ class WebSocket(object):
 def _sendall(s, data):
     bytes_sent = 0
     while bytes_sent < len(data):
-        try:
-            bytes_sent += s.send(data[bytes_sent:])
-        except socket.error as e:
-            if e.errno == errno.EWOULDBLOCK:
-                select.select((),(s,),())
-            else:
-                raise
-
+        select.select((),(s,),())
+        bytes_sent += s.send(data[bytes_sent:])
 
 
 class WebSocketFrame(object):
