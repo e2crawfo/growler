@@ -4,12 +4,12 @@ import base64
 import errno
 import hashlib
 import logging
+import select
 import socket
 import struct
 import ssl
 import sys
 import threading
-import time
 import traceback
 
 try:
@@ -418,7 +418,6 @@ class WebSocket(object):
     def write_binary(self, data):
         self.write_frame(WebSocketFrame.create_binary_frame(data))
 
-
 def _sendall(s, data):
     bytes_sent = 0
     while bytes_sent < len(data):
@@ -426,7 +425,7 @@ def _sendall(s, data):
             bytes_sent += s.send(data[bytes_sent:])
         except socket.error as e:
             if e.errno == errno.EWOULDBLOCK:
-                time.sleep(0.01)
+                select.select((),(s,),())
             else:
                 raise
 
