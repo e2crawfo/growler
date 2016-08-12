@@ -5,7 +5,6 @@ import collections
 import threading
 
 import nengo
-from nengo import spa
 import json
 
 from nengo_gui.components.component import Component
@@ -14,6 +13,7 @@ from nengo_gui.components.slider import OverriddenOutput
 from nengo_gui.modal_js import infomodal
 import nengo_gui.user_action
 import nengo_gui.layout
+
 
 class NetGraph(Component):
     """Handles computations and communications for NetGraph on the JS side.
@@ -86,7 +86,7 @@ class NetGraph(Component):
         with self.page.lock:
             self._reload(code=code)
 
-    def _reload(self, code=None):
+    def _reload(self, code=None):  # noqa: C901
         """Loads and executes the code, removing old items,
         updating changed items
         and adding new ones"""
@@ -139,7 +139,8 @@ class NetGraph(Component):
                 new_item = None
 
             same_class = False
-            for cls in [nengo.Ensemble, nengo.Node, nengo.Network, nengo.Connection]:
+            for cls in [nengo.Ensemble, nengo.Node, nengo.Network,
+                        nengo.Connection]:
                 if isinstance(new_item, cls) and isinstance(old_item, cls):
                     same_class = True
                     break
@@ -152,7 +153,8 @@ class NetGraph(Component):
             elif not same_class:
                 # don't allow changing classes
                 keep_object = False
-            elif self.get_extra_info(new_item) != self.get_extra_info(old_item):
+            elif (self.get_extra_info(new_item) !=
+                    self.get_extra_info(old_item)):
                 keep_object = False
 
             if not keep_object:
@@ -192,7 +194,8 @@ class NetGraph(Component):
         removed_items = list(removed_uids.values())
         for c in self.page.components[:]:
             for item in c.code_python_args(old_default_labels):
-                if item not in self.uids.keys() and item not in collapsed_items:
+                if (item not in self.uids.keys() and
+                        item not in collapsed_items):
 
                     # item is a python string that is an argument to the
                     # constructor for the Component.  So it could be 'a',
@@ -204,7 +207,7 @@ class NetGraph(Component):
                     # The following lambda should do this, handling both
                     # the normal argument case and the keyword argument case.
                     safe_eval = ('(lambda *a, **b: '
-                                     'list(a) + list(b.values()))(%s)[0]')
+                                 'list(a) + list(b.values()))(%s)[0]')
 
                     # this Component depends on an item inside a collapsed
                     #  Network, so we need to check if that component has
@@ -271,8 +274,8 @@ class NetGraph(Component):
                 index = component_uids.index(name)
                 old_component = self.page.components[index]
                 if isinstance(obj, (nengo_gui.components.SimControlTemplate,
-                                  nengo_gui.components.AceEditorTemplate,
-                                  nengo_gui.components.NetGraphTemplate)):
+                              nengo_gui.components.AceEditorTemplate,
+                              nengo_gui.components.NetGraphTemplate)):
                     # just keep these ones
                     components.append(old_component)
                 else:
@@ -293,7 +296,7 @@ class NetGraph(Component):
         # notifies SimControl to pause the simulation
         self.page.changed = True
 
-    def _reload_update_item(self, uid, old_item, new_item, new_name_finder):
+    def _reload_update_item(self, uid, old_item, new_item, new_name_finder):  # noqa: C901
         """Tell the client about changes to the item due to reload."""
         changed = False
 
