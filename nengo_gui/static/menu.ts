@@ -32,6 +32,11 @@ export function hideAny() {
     });
 }
 
+interface MenuItem {
+    html: string;
+    callback: () => void;
+}
+
 export class Menu {
     actions;
     div;
