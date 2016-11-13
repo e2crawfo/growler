@@ -32,7 +32,7 @@ export function hideAny() {
     });
 }
 
-interface MenuItem {
+export interface MenuItem {
     html: string;
     callback: () => void;
 }
